@@ -3,4 +3,6 @@ export class Application {
 
   // 授权登陆
   static login: string = Application.baseContext + '/login';
+  static getAccountInfo: string =
+    Application.baseContext + '/user/getAccountInfo';
 }

@@ -1,6 +1,6 @@
 import { Menu } from '@delon/theme';
 
-export class AccountCredentialsInfo {
+export class CredentialsModel {
   constructor(parameters) {}
   app: App;
   user: UserInfo;
