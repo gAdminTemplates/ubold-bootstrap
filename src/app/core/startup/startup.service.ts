@@ -14,7 +14,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { I18NService } from '../i18n/i18n.service';
 import { Application } from '@env/application';
 import { CredentialsModel } from 'app/routes/passport/login/model/credentialsModel';
-import { AppResponse } from '@core/model/AppResponse';
+import { IResponse } from '@core/model/IResponse';
 import { GoldbalConstant } from '@env/globalconstant';
 
 /**
@@ -56,7 +56,7 @@ export class StartupService {
             this.translate.setDefaultLang(this.i18n.defaultLang);
 
             // application data
-            const appResponse: AppResponse<CredentialsModel> = appData;
+            const appResponse: IResponse<CredentialsModel> = appData;
             if (GoldbalConstant.STATUS_CODE.SUCCESS === appResponse.code) {
               const res: CredentialsModel = appResponse.result;
 

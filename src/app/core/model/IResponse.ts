@@ -1,4 +1,4 @@
-export class AppResponse<T> {
+export class IResponse<T> {
   constructor(parameters) {}
   code: number;
   message: string;
