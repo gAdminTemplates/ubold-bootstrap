@@ -1,4 +1,4 @@
-import { SettingsService } from '@delon/theme';
+import { SettingsService, _HttpClient } from '@delon/theme';
 import { Component, OnDestroy, Inject, Optional } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
@@ -12,6 +12,10 @@ import {
 import { ReuseTabService } from '@delon/abc';
 import { environment } from '@env/environment';
 import { StartupService } from '@core/startup/startup.service';
+import { IResponse } from '@core/model/IResponse';
+import { CredentialsModel } from './model/CredentialsModel';
+import { Application } from '@env/application';
+import { GoldbalConstant } from '@env/globalconstant';
 
 @Component({
   selector: 'passport-login',
@@ -37,6 +41,7 @@ export class UserLoginComponent implements OnDestroy {
     private reuseTabService: ReuseTabService,
     @Inject(DA_SERVICE_TOKEN) private tokenService: TokenService,
     private startupSrv: StartupService,
+    private http: _HttpClient,
   ) {
     this.form = fb.group({
       userName: [null, [Validators.required, Validators.minLength(5)]],
@@ -99,39 +104,38 @@ export class UserLoginComponent implements OnDestroy {
       this.captcha.updateValueAndValidity();
       if (this.mobile.invalid || this.captcha.invalid) return;
     }
-    // mock http
-    this.loading = true;
-    setTimeout(() => {
-      this.loading = false;
-      if (this.type === 0) {
-        if (
-          this.userName.value !== 'admin' ||
-          this.password.value !== '888888'
-        ) {
-          this.error = `账户或密码错误`;
-          return;
-        }
-      }
 
-      // 清空路由复用信息
-      this.reuseTabService.clear();
-      // 设置Token信息
-      this.tokenService.set({
-        token: '123456789',
-        name: this.userName.value,
-        email: `cipchk@qq.com`,
-        id: 10000,
-        time: +new Date(),
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    this.http
+      .post<IResponse<CredentialsModel>>(
+        Application.login,
+        { username: this.userName.value, password: this.password.value },
+        { headers: headers },
+      )
+      .subscribe(resp => {
+        if (GoldbalConstant.STATUS_CODE.SUCCESS === resp.code) {
+          const credentialsModel = resp.result;
+
+          // 清空路由复用信息
+          this.reuseTabService.clear();
+
+          // 设置Token信息
+          this.tokenService.set({
+            token: credentialsModel.token,
+            name: credentialsModel.user.name,
+            email: credentialsModel.user.email,
+            id: credentialsModel.user.id,
+            time: +new Date(),
+          });
+
+          // 重新获取 StartupService 内容，若其包括 User 有关的信息的话
+          this.startupSrv.load().then(() => this.router.navigate(['/']));
+        } else this.error = `账户或密码错误`;
+        return;
       });
-      // 重新获取 StartupService 内容，若其包括 User 有关的信息的话
-      // this.startupSrv.load().then(() => this.router.navigate(['/']));
-      // 否则直接跳转
-      this.router.navigate(['/']);
-    }, 1000);
   }
 
   // region: social
-
   open(type: string, openType: SocialOpenType = 'href') {
     let url = ``;
     let callback = ``;
